@@ -1,17 +1,19 @@
 {
   "expo": {
-    "name": "app-temp",
-    "slug": "app-temp",
+    "name": "KPIDashboard",
+    "slug": "kpidashboard",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "apptemp",
+    "scheme": "kpidashboard",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.oytunbolukbasi.kpidashboard"
     },
     "android": {
+      "package": "com.oytunbolukbasi.kpidashboard",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -38,7 +40,9 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-localization",
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,

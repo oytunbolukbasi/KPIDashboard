@@ -1,0 +1,81 @@
+{
+  "tabs": {
+    "home": "Dashboard",
+    "data": "Data",
+    "settings": "Settings"
+  },
+  "onboarding": {
+    "title1": "KPI Tracking",
+    "desc1": "Monitor all your app performance metrics from a single screen.",
+    "title2": "Detailed Charts",
+    "desc2": "Visualize download, active user, and retention trends.",
+    "title3": "Get Started",
+    "desc3": "Enter your data and analyze instantly.",
+    "next": "Next",
+    "getStarted": "Start"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "noData": "No data yet",
+    "noDataDesc": "Add your first entry from the Data tab",
+    "downloads": "Devices",
+    "totalDownloads": "Total Devices",
+    "activeUsers": "Active Users",
+    "mau": "MAU",
+    "dau": "DAU",
+    "stickiness": "Stickiness",
+    "pushOptIn": "Push Opt-in",
+    "ios": "iOS",
+    "android": "Android",
+    "total": "Total",
+    "change": "Change",
+    "downloadTrend": "Device Trend",
+    "activeUsersTrend": "Active Users Trend",
+    "mauDauTrend": "MAU & DAU Trend",
+    "stickinessTrend": "Stickiness Trend",
+    "pushDistribution": "Push Opt-in Distribution",
+    "latestData": "Latest Data"
+  },
+  "data": {
+    "title": "Data Management",
+    "addNew": "New Entry",
+    "noEntries": "No entries yet",
+    "noEntriesDesc": "Tap the + button to add your first entry",
+    "deleteConfirm": "Are you sure you want to delete this entry?",
+    "delete": "Delete",
+    "cancel": "Cancel"
+  },
+  "form": {
+    "addTitle": "Add New Entry",
+    "editTitle": "Edit Entry",
+    "date": "Date",
+    "datePlaceholder": "DD.MM.YYYY",
+    "downloads": "Downloads",
+    "iosDownloads": "iOS Downloads",
+    "androidDownloads": "Android Downloads",
+    "activeUsers": "Active Users",
+    "activeUsersHint": "Opened at least once in 30 days",
+    "pushOptIn": "Push Opt-in",
+    "iosPush": "iOS Push Opt-in",
+    "androidPush": "Android Push Opt-in",
+    "engagement": "Engagement",
+    "mau": "Monthly Active Users (MAU)",
+    "dau": "Daily Active Users (DAU)",
+    "save": "Save",
+    "update": "Update",
+    "required": "This field is required"
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance",
+    "language": "Language",
+    "theme": "Theme",
+    "darkMode": "Dark Mode",
+    "dangerZone": "Danger Zone",
+    "resetOnboarding": "Reset Onboarding",
+    "deleteAllData": "Delete All Data",
+    "deleteAllConfirm": "Are you sure you want to delete all KPI data? This action cannot be undone.",
+    "confirm": "Yes, Delete",
+    "cancel": "Cancel"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "tabs": {
+    "home": "Dashboard",
+    "data": "Veriler",
+    "settings": "Ayarlar"
+  },
+  "onboarding": {
+    "title1": "KPI Takibi",
+    "desc1": "Uygulamanın tüm performans metriklerini tek ekrandan izle.",
+    "title2": "Detaylı Grafikler",
+    "desc2": "İndirme, aktif kullanıcı ve kalıcılık trendlerini görselleştir.",
+    "title3": "Hemen Başla",
+    "desc3": "Verilerini gir ve anında analiz et.",
+    "next": "İleri",
+    "getStarted": "Başla"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "noData": "Henüz veri yok",
+    "noDataDesc": "Veriler sekmesinden ilk kaydını ekle",
+    "downloads": "Cihaz",
+    "totalDownloads": "Toplam Cihaz",
+    "activeUsers": "Aktif Kullanıcı",
+    "mau": "MAU",
+    "dau": "DAU",
+    "stickiness": "Kalıcılık",
+    "pushOptIn": "Push İzni",
+    "ios": "iOS",
+    "android": "Android",
+    "total": "Toplam",
+    "change": "Değişim",
+    "downloadTrend": "Cihaz Trendi",
+    "activeUsersTrend": "Aktif Kullanıcı Trendi",
+    "mauDauTrend": "MAU & DAU Trendi",
+    "stickinessTrend": "Kalıcılık Trendi",
+    "pushDistribution": "Push İzni Dağılımı",
+    "latestData": "Son Veriler"
+  },
+  "data": {
+    "title": "Veri Yönetimi",
+    "addNew": "Yeni Kayıt",
+    "noEntries": "Henüz kayıt yok",
+    "noEntriesDesc": "Sağ alttaki + butonuna tıklayarak ilk kaydını ekle",
+    "deleteConfirm": "Bu kaydı silmek istediğinden emin misin?",
+    "delete": "Sil",
+    "cancel": "İptal"
+  },
+  "form": {
+    "addTitle": "Yeni Kayıt Ekle",
+    "editTitle": "Kaydı Düzenle",
+    "date": "Tarih",
+    "datePlaceholder": "GG.AA.YYYY",
+    "downloads": "İndirmeler",
+    "iosDownloads": "iOS İndirme",
+    "androidDownloads": "Android İndirme",
+    "activeUsers": "Aktif Kullanıcı",
+    "activeUsersHint": "30 gün içinde en az 1 kez açan",
+    "pushOptIn": "Push İzni",
+    "iosPush": "iOS Push İzni",
+    "androidPush": "Android Push İzni",
+    "engagement": "Etkileşim",
+    "mau": "Aylık Aktif Kullanıcı (MAU)",
+    "dau": "Günlük Aktif Kullanıcı (DAU)",
+    "save": "Kaydet",
+    "update": "Güncelle",
+    "required": "Bu alan zorunludur"
+  },
+  "settings": {
+    "title": "Ayarlar",
+    "appearance": "Görünüm",
+    "language": "Dil",
+    "theme": "Tema",
+    "darkMode": "Koyu Mod",
+    "dangerZone": "Tehlikeli Bölge",
+    "resetOnboarding": "Tanıtımı Sıfırla",
+    "deleteAllData": "Tüm Verileri Sil",
+    "deleteAllConfirm": "Tüm KPI verilerini silmek istediğinden emin misin? Bu işlem geri alınamaz.",
+    "confirm": "Evet, Sil",
+    "cancel": "İptal"
+  }
+}

@@ -1,0 +1,77 @@
+import { Platform } from 'react-native';
+
+export const AppTheme = {
+  light: {
+    background: '#F5F5FA',
+    surface: '#FFFFFF',
+    surfaceSecondary: '#F0F0F7',
+    text: '#1A1A2E',
+    textSecondary: '#6B7280',
+    textTertiary: '#9CA3AF',
+    border: '#E5E7EB',
+    accent: '#6C5CE7',
+    accentLight: 'rgba(108, 92, 231, 0.1)',
+    green: '#00B894',
+    greenLight: 'rgba(0, 184, 148, 0.1)',
+    red: '#E17055',
+    redLight: 'rgba(225, 112, 85, 0.1)',
+    orange: '#FDCB6E',
+    blue: '#0984E3',
+    blueLight: 'rgba(9, 132, 227, 0.1)',
+    chartLine1: '#6C5CE7',
+    chartLine2: '#00B894',
+    chartLine3: '#0984E3',
+    chartLine4: '#E17055',
+    chartArea: 'rgba(108, 92, 231, 0.15)',
+    cardShadow: 'rgba(0, 0, 0, 0.06)',
+    statusBar: 'dark' as const,
+  },
+  dark: {
+    background: '#0A0A12',
+    surface: '#14142B',
+    surfaceSecondary: '#1C1C3A',
+    text: '#F0F0FF',
+    textSecondary: '#9B9BB4',
+    textTertiary: '#6B6B80',
+    border: '#2A2A45',
+    accent: '#7C6CF0',
+    accentLight: 'rgba(124, 108, 240, 0.15)',
+    green: '#00D2A0',
+    greenLight: 'rgba(0, 210, 160, 0.12)',
+    red: '#FF7675',
+    redLight: 'rgba(255, 118, 117, 0.12)',
+    orange: '#FFEAA7',
+    blue: '#74B9FF',
+    blueLight: 'rgba(116, 185, 255, 0.12)',
+    chartLine1: '#7C6CF0',
+    chartLine2: '#00D2A0',
+    chartLine3: '#74B9FF',
+    chartLine4: '#FF7675',
+    chartArea: 'rgba(124, 108, 240, 0.2)',
+    cardShadow: 'rgba(0, 0, 0, 0.3)',
+    statusBar: 'light' as const,
+  },
+};
+
+export type ThemeColors = typeof AppTheme.light;
+
+export const Fonts = Platform.select({
+  ios: {
+    sans: 'system-ui',
+    serif: 'ui-serif',
+    rounded: 'ui-rounded',
+    mono: 'ui-monospace',
+  },
+  default: {
+    sans: 'normal',
+    serif: 'serif',
+    rounded: 'normal',
+    mono: 'monospace',
+  },
+  web: {
+    sans: "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    serif: "Georgia, 'Times New Roman', serif",
+    rounded: "'SF Pro Rounded', sans-serif",
+    mono: "SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+  },
+});

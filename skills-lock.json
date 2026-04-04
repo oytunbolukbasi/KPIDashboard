@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "zafer-skills": {
+      "source": "zaferayan/skills",
+      "sourceType": "github",
+      "computedHash": "5f92b45c646b654e90ca81606a515d78c5a49551eff298e1f8dc0f330463e3e6"
+    }
+  }
+}
