@@ -21,14 +21,13 @@ export function KPIProvider({ children }: { children: React.ReactNode }) {
   const [computed, setComputed] = useState<KPIEntryComputed[]>([]);
   const [loading, setLoading] = useState(true);
 
-const SEED_DATA: Omit<KPIEntry, 'id'>[] = [
-  { date: '1.10.2025', downloadIos: 182070, downloadAndroid: 208130, activeUsers: 187810, pushOptInIos: 129390, pushOptInAndroid: 171020, mau: 188290, dau: 100200 },
-  { date: '31.10.2025', downloadIos: 182890, downloadAndroid: 207100, activeUsers: 183510, pushOptInIos: 129580, pushOptInAndroid: 170260, mau: 183260, dau: 99170 },
-  { date: '30.11.2025', downloadIos: 183530, downloadAndroid: 205260, activeUsers: 178440, pushOptInIos: 129800, pushOptInAndroid: 169090, mau: 178570, dau: 96080 },
-  { date: '31.12.2025', downloadIos: 184260, downloadAndroid: 204290, activeUsers: 166760, pushOptInIos: 130250, pushOptInAndroid: 168590, mau: 174426, dau: 97629 },
-  { date: '1.01.2026', downloadIos: 184580, downloadAndroid: 204440, activeUsers: 191640, pushOptInIos: 130490, pushOptInAndroid: 168750, mau: 191640, dau: 102980 },
-  { date: '2.01.2026', downloadIos: 187320, downloadAndroid: 203650, activeUsers: 180254, pushOptInIos: 131620, pushOptInAndroid: 168300, mau: 181010, dau: 97110 },
-];
+  const SEED_DATA: Omit<KPIEntry, 'id'>[] = [
+    { date: '09.2025', downloadIos: 182070, downloadAndroid: 208130, activeUsers: 187810, pushOptInIos: 129390, pushOptInAndroid: 171020, mau: 188290, dau: 100200 },
+    { date: '10.2025', downloadIos: 182890, downloadAndroid: 207100, activeUsers: 183510, pushOptInIos: 129580, pushOptInAndroid: 170260, mau: 183260, dau: 99170 },
+    { date: '11.2025', downloadIos: 183530, downloadAndroid: 205260, activeUsers: 178440, pushOptInIos: 129800, pushOptInAndroid: 169090, mau: 178570, dau: 96080 },
+    { date: '12.2025', downloadIos: 184260, downloadAndroid: 204290, activeUsers: 166760, pushOptInIos: 130250, pushOptInAndroid: 168590, mau: 174426, dau: 97629 },
+    { date: '01.2026', downloadIos: 184580, downloadAndroid: 204440, activeUsers: 191640, pushOptInIos: 130490, pushOptInAndroid: 168750, mau: 191640, dau: 102980 },
+  ];
 
   const refresh = useCallback(async () => {
     try {
@@ -41,6 +40,22 @@ const SEED_DATA: Omit<KPIEntry, 'id'>[] = [
           await KPIDatabase.addEntry(entry);
         }
         data = await KPIDatabase.getAllEntries();
+      } else {
+        // Migrate legacy date formats (e.g., '1.10.2025' -> '10.2025')
+        let needsRefresh = false;
+        for (const item of data) {
+          const parts = item.date.split('.');
+          if (parts.length === 3) {
+            const mm = parts[1].padStart(2, '0');
+            const yyyy = parts[2];
+            const newDate = `${mm}.${yyyy}`;
+            await KPIDatabase.updateEntry(item.id, { ...item, date: newDate });
+            needsRefresh = true;
+          }
+        }
+        if (needsRefresh) {
+          data = await KPIDatabase.getAllEntries();
+        }
       }
 
       setEntries(data);

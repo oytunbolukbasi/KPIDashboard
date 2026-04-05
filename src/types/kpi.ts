@@ -23,6 +23,7 @@ export interface KPIEntryComputed extends KPIEntry {
   stickiness: number;
   mauChange: number | null;
   dauChange: number | null;
+  stickinessChange: number | null;
 }
 
 export function computeKPIEntry(
@@ -38,6 +39,7 @@ export function computeKPIEntry(
   let activeUsersChange: number | null = null;
   let mauChange: number | null = null;
   let dauChange: number | null = null;
+  let stickinessChange: number | null = null;
 
   if (prevEntry) {
     const prevTotal = prevEntry.downloadIos + prevEntry.downloadAndroid;
@@ -47,6 +49,9 @@ export function computeKPIEntry(
       : null;
     mauChange = prevEntry.mau > 0 ? ((entry.mau - prevEntry.mau) / prevEntry.mau) * 100 : null;
     dauChange = prevEntry.dau > 0 ? ((entry.dau - prevEntry.dau) / prevEntry.dau) * 100 : null;
+    
+    const prevStickiness = prevEntry.mau > 0 ? (prevEntry.dau / prevEntry.mau) * 100 : 0;
+    stickinessChange = prevStickiness > 0 ? ((stickiness - prevStickiness) / prevStickiness) * 100 : null;
   }
 
   return {
@@ -62,6 +67,7 @@ export function computeKPIEntry(
     stickiness,
     mauChange,
     dauChange,
+    stickinessChange
   };
 }
 

@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
   header: { fontSize: 24, fontWeight: '800' },
   addBtn: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20 },
   addBtnText: { color: '#fff', fontSize: 13, fontWeight: '700' },
-  listContent: { padding: 20, paddingBottom: 40 },
+  listContent: { padding: 20, paddingBottom: 120 },
   card: {
     borderRadius: 20,
     padding: 18,

@@ -47,6 +47,19 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4bd85c7c-8b12-4d3f-8fd6-67038fd6289c"
+      }
+    },
+    "owner": "oytunbolukbasi",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/4bd85c7c-8b12-4d3f-8fd6-67038fd6289c"
     }
   }
 }
