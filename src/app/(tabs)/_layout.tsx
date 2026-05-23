@@ -40,6 +40,10 @@ export default function TabLayout() {
         <Label>{t('tabs.data')}</Label>
         <Icon sf="list.dash" drawable="list" />
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="ai-agent">
+        <Label>{t('tabs.ai')}</Label>
+        <Icon sf="sparkles" drawable="sparkles" />
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="settings">
         <Label>{t('tabs.settings')}</Label>
         <Icon sf="gear" drawable="settings" />

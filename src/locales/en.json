@@ -2,7 +2,8 @@
   "tabs": {
     "home": "Dashboard",
     "data": "Data",
-    "settings": "Settings"
+    "settings": "Settings",
+    "ai": "AI Agent"
   },
   "onboarding": {
     "title1": "KPI Tracking",
@@ -76,6 +77,25 @@
     "deleteAllData": "Delete All Data",
     "deleteAllConfirm": "Are you sure you want to delete all KPI data? This action cannot be undone.",
     "confirm": "Yes, Delete",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "aiAgent": "AI Agent Settings",
+    "geminiKey": "Gemini API Key",
+    "netmeraToken": "Netmera MCP Token",
+    "save": "Save",
+    "keysSavedTitle": "Success",
+    "keysSavedMsg": "Keys saved successfully.",
+    "keysSaveError": "Failed to save keys.",
+    "netmeraEmail": "Netmera Email",
+    "netmeraPassword": "Netmera Password",
+    "netmeraLoginBtn": "Log In & Authorize",
+    "netmeraLoginSuccess": "Login successful! Netmera MCP Token has been saved to your device.",
+    "netmeraLoginFail": "Login failed. Please check your email and password.",
+    "or": "or",
+    "connecting": "Connecting...",
+    "ssoInstruction": "If you log in with SSO (Google/Microsoft etc.) or get a login error, you can create a manual token from the Netmera Panel:",
+    "netmeraPanelGlobal": "Global Panel",
+    "netmeraPanelTR": "TR Panel",
+    "netmeraPanelEU": "EU Panel",
+    "netmeraTokenGuide": "Create and copy a token from Netmera Panel > Settings > Integrations > MCP Server, then paste it in the field below."
   }
 }

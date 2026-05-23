@@ -53,7 +53,7 @@ export const AppTheme = {
   },
 };
 
-export type ThemeColors = typeof AppTheme.light;
+export type ThemeColors = typeof AppTheme.light | typeof AppTheme.dark;
 
 export const Fonts = Platform.select({
   ios: {

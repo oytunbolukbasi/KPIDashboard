@@ -2,7 +2,8 @@
   "tabs": {
     "home": "Dashboard",
     "data": "Veriler",
-    "settings": "Ayarlar"
+    "settings": "Ayarlar",
+    "ai": "AI Agent"
   },
   "onboarding": {
     "title1": "KPI Takibi",
@@ -76,6 +77,25 @@
     "deleteAllData": "Tüm Verileri Sil",
     "deleteAllConfirm": "Tüm KPI verilerini silmek istediğinden emin misin? Bu işlem geri alınamaz.",
     "confirm": "Evet, Sil",
-    "cancel": "İptal"
+    "cancel": "İptal",
+    "aiAgent": "AI Agent Ayarları",
+    "geminiKey": "Gemini API Anahtarı (API Key)",
+    "netmeraToken": "Netmera MCP Bağlantı Token'ı",
+    "save": "Kaydet",
+    "keysSavedTitle": "Başarılı",
+    "keysSavedMsg": "Anahtarlar başarıyla kaydedildi.",
+    "keysSaveError": "Anahtarlar kaydedilemedi.",
+    "netmeraEmail": "Netmera E-posta",
+    "netmeraPassword": "Netmera Şifre",
+    "netmeraLoginBtn": "Giriş Yap ve Yetkilendir",
+    "netmeraLoginSuccess": "Giriş başarılı! Netmera MCP Token'ı cihazınıza kaydedildi.",
+    "netmeraLoginFail": "Giriş başarısız. Lütfen e-posta ve şifrenizi kontrol edin.",
+    "or": "veya",
+    "connecting": "Bağlanıyor...",
+    "ssoInstruction": "SSO (Google/Microsoft vb.) ile giriş yapıyorsanız veya giriş hatası alıyorsanız, Netmera Panel'inden manuel token oluşturabilirsiniz:",
+    "netmeraPanelGlobal": "Global Panel",
+    "netmeraPanelTR": "TR Panel",
+    "netmeraPanelEU": "EU Panel",
+    "netmeraTokenGuide": "Netmera Panel > Ayarlar > Entegrasyonlar > MCP Server kısmından token oluşturup kopyalayın ve aşağıdaki alana yapıştırın."
   }
 }

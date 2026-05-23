@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { KPIEntry, KPIEntryComputed } from '@/types/kpi';
 import { computeAllEntries } from '@/types/kpi';
-import * as KPIDatabase from '@/lib/kpi-database';
+import * as KPIDatabase from '@/lib/kpi-database.firestore';
 
 type KPIContextType = {
   entries: KPIEntry[];
