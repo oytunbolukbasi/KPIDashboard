@@ -8,6 +8,8 @@ import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  Animated,
+  Easing,
   ActivityIndicator,
   SafeAreaView,
   Alert,
@@ -15,15 +17,42 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getSecureItem } from '@/lib/secure-store-fallback';
 import * as Haptics from 'expo-haptics';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeContext } from '@/context/theme-context';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GeminiNetmeraAgent, AgentMessage, ToolCall } from '@/lib/gemini-agent';
+import { ClaudeNetmeraAgent } from '@/lib/claude-agent';
 import { createSession, updateSession } from '@/lib/chat-store';
+
+const MODELS = [
+  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'gemini' },
+  { id: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6', provider: 'claude' },
+] as const;
+
+type ModelId = typeof MODELS[number]['id'];
+
+const MODEL_STORAGE_KEY = '@ai_agent_selected_model';
+
+async function checkKeysForModel(modelId: ModelId): Promise<boolean> {
+  try {
+    const nTok = await getSecureItem('netmera_mcp_token');
+    if (!nTok) return false;
+    if (modelId === 'gemini-2.5-flash') {
+      const key = await getSecureItem('gemini_api_key');
+      return !!key;
+    }
+    const key = await getSecureItem('anthropic_api_key');
+    return !!key;
+  } catch {
+    return false;
+  }
+}
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -55,40 +84,107 @@ export default function AIAgentScreen() {
   const [keysConfigured, setKeysConfigured] = useState<boolean | null>(null);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [selectedToolCall, setSelectedToolCall] = useState<ToolCall | null>(null);
+  const [selectedModel, setSelectedModel] = useState<ModelId>('gemini-2.5-flash');
+  const [modelPickerVisible, setModelPickerVisible] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState<{ x: number; y: number } | null>(null);
+  const [streamingIndex, setStreamingIndex] = useState<number | null>(null);
 
   const flatListRef = useRef<FlatList>(null);
   const inputRef = useRef<TextInput>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const triggerRef = useRef<any>(null);
+  const typewriterRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Gradient glow animation (3 color phases cycling during loading)
+  const glowPhase = useRef(new Animated.Value(0)).current;
+  const glowLoopRef = useRef<Animated.CompositeAnimation | null>(null);
+
+  // Each glow fades in/out gently — peaks at 0.55 opacity, slow transitions
+  const glow1Opacity = glowPhase.interpolate({
+    inputRange: [0, 0.12, 0.28, 0.36, 1],
+    outputRange: [0, 0.55, 0.45, 0, 0],
+  });
+  const glow2Opacity = glowPhase.interpolate({
+    inputRange: [0, 0.36, 0.48, 0.62, 0.7, 1],
+    outputRange: [0, 0, 0.55, 0.45, 0, 0],
+  });
+  const glow3Opacity = glowPhase.interpolate({
+    inputRange: [0, 0.7, 0.82, 0.96, 1],
+    outputRange: [0, 0, 0.55, 0.45, 0],
+  });
 
   useEffect(() => {
-    async function checkKeys() {
-      try {
-        const gKey = await getSecureItem('gemini_api_key');
-        const nTok = await getSecureItem('netmera_mcp_token');
-        setKeysConfigured(!!(gKey && nTok));
-      } catch (e) {
-        setKeysConfigured(false);
-      }
+    async function init() {
+      const saved = await AsyncStorage.getItem(MODEL_STORAGE_KEY);
+      const model = (saved ?? 'gemini-2.5-flash') as ModelId;
+      setSelectedModel(model);
+      setKeysConfigured(await checkKeysForModel(model));
     }
-    checkKeys();
+    init();
   }, []);
+
+  const handleModelSelect = async (modelId: ModelId) => {
+    setModelPickerVisible(false);
+    setSelectedModel(modelId);
+    await AsyncStorage.setItem(MODEL_STORAGE_KEY, modelId);
+    setMessages([]);
+    setCurrentSessionId(null);
+    setKeysConfigured(null);
+    setKeysConfigured(await checkKeysForModel(modelId));
+  };
+
+  const showModelPicker = () => {
+    triggerRef.current?.measure((_fx: number, _fy: number, _w: number, h: number, px: number, py: number) => {
+      setDropdownPos({ x: px, y: py + h + 6 });
+      setModelPickerVisible(true);
+    });
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => inputRef.current?.focus(), 400);
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      if (typewriterRef.current) clearInterval(typewriterRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (loading) {
+      glowPhase.setValue(0);
+      glowLoopRef.current = Animated.loop(
+        Animated.timing(glowPhase, {
+          toValue: 1,
+          duration: 7000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        })
+      );
+      glowLoopRef.current.start();
+    } else {
+      glowLoopRef.current?.stop();
+      glowLoopRef.current = null;
+      Animated.timing(glowPhase, {
+        toValue: 0,
+        duration: 700,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [loading]);
+
   const handleSend = async (textToSend: string) => {
     if (!textToSend.trim() || loading) return;
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-    const geminiKey = await getSecureItem('gemini_api_key');
     const netmeraToken = await getSecureItem('netmera_mcp_token');
 
-    if (!geminiKey || !netmeraToken) {
+    if (!netmeraToken) {
       Alert.alert(
-        t('settings.keysSaveError', 'Anahtarlar Eksik'),
-        t('settings.keysMissingMsg', 'Lütfen önce Ayarlar sekmesinden API anahtarlarını kaydedin.')
+        t('settings.keysSaveError', 'Bağlantı Eksik'),
+        t('settings.keysMissingMsg', 'Lütfen önce Ayarlar sekmesinden Netmera bağlantısını tamamlayın.')
       );
       return;
     }
@@ -105,31 +201,81 @@ export default function AIAgentScreen() {
     }, 100);
 
     try {
-      const agent = new GeminiNetmeraAgent(geminiKey, netmeraToken);
-      const response = await agent.run(textToSend, messages, (status) => {
-        setStatusMessage(status);
-      });
+      let agentResult: { content: string; toolCalls?: ToolCall[] };
+
+      if (selectedModel === 'gemini-2.5-flash') {
+        const geminiKey = await getSecureItem('gemini_api_key');
+        if (!geminiKey) {
+          Alert.alert('Gemini API Key Eksik', 'Ayarlar > AI Servisleri kısmından Gemini API Key ekleyin.');
+          setLoading(false);
+          setMessages(messages);
+          return;
+        }
+        const agent = new GeminiNetmeraAgent(geminiKey, netmeraToken);
+        agentResult = await agent.run(textToSend, messages, (status) => setStatusMessage(status));
+      } else {
+        const anthropicKey = await getSecureItem('anthropic_api_key');
+        if (!anthropicKey) {
+          Alert.alert('Claude API Key Eksik', 'Ayarlar > AI Servisleri kısmından Claude API Key ekleyin.');
+          setLoading(false);
+          setMessages(messages);
+          return;
+        }
+        const agent = new ClaudeNetmeraAgent(anthropicKey, netmeraToken, selectedModel);
+        agentResult = await agent.run(textToSend, messages, (status) => setStatusMessage(status));
+      }
+
+      const response = agentResult;
 
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-      const modelMsg: AgentMessage = { role: 'model', content: response.content };
-      if (response.toolCalls && response.toolCalls.length > 0) {
-        modelMsg.toolCalls = response.toolCalls;
-      }
-      const finalMessages: AgentMessage[] = [...updatedMessages, modelMsg];
-      setMessages(finalMessages);
+      const fullContent = response.content;
+      const modelMsg: AgentMessage = { role: 'model', content: '' };
+      if (response.toolCalls?.length) modelMsg.toolCalls = response.toolCalls;
 
-      try {
-        const toSave = sanitizeMessages(finalMessages);
-        if (currentSessionId) {
-          await updateSession(currentSessionId, toSave);
-        } else {
-          const session = await createSession(toSave);
-          setCurrentSessionId(session.id);
+      const finalMessages: AgentMessage[] = [...updatedMessages, modelMsg];
+      const newMsgIndex = finalMessages.length - 1;
+      setMessages(finalMessages);
+      setStreamingIndex(newMsgIndex);
+
+      // Scroll to TOP of new agent message so user reads from the beginning
+      setTimeout(() => {
+        try {
+          flatListRef.current?.scrollToIndex({ index: newMsgIndex, animated: true, viewPosition: 0 });
+        } catch {}
+      }, 80);
+
+      // Adaptive typewriter: target ~1.5s regardless of response length
+      if (typewriterRef.current) clearInterval(typewriterRef.current);
+      const TICK_MS = 20;
+      const TARGET_TICKS = 75;
+      const chunkSize = Math.min(30, Math.max(3, Math.ceil(fullContent.length / TARGET_TICKS)));
+      let pos = 0;
+
+      typewriterRef.current = setInterval(() => {
+        pos = Math.min(pos + chunkSize, fullContent.length);
+        const slice = fullContent.slice(0, pos);
+        setMessages(prev => {
+          const updated = [...prev];
+          if (updated[newMsgIndex]) {
+            updated[newMsgIndex] = { ...updated[newMsgIndex], content: slice };
+          }
+          return updated;
+        });
+        if (pos >= fullContent.length) {
+          clearInterval(typewriterRef.current!);
+          typewriterRef.current = null;
+          setStreamingIndex(null);
+          // Save to Firestore with full content after typewriter completes
+          const completedMsg: AgentMessage = { ...modelMsg, content: fullContent };
+          const completedMessages = [...updatedMessages, completedMsg];
+          const toSave = sanitizeMessages(completedMessages);
+          (currentSessionId
+            ? updateSession(currentSessionId, toSave)
+            : createSession(toSave).then(s => setCurrentSessionId(s.id))
+          ).catch(e => console.warn('Chat history save failed:', e));
         }
-      } catch (storeErr) {
-        console.warn('Chat history save failed:', storeErr);
-      }
+      }, TICK_MS);
     } catch (e: any) {
       console.error('Agent execution error:', e);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -140,12 +286,12 @@ export default function AIAgentScreen() {
           content: t('aiAgent.errorMsg', { message: e.message || t('common.error') }),
         },
       ]);
-    } finally {
-      setLoading(false);
-      setStatusMessage('');
       setTimeout(() => {
         flatListRef.current?.scrollToEnd({ animated: true });
       }, 100);
+    } finally {
+      setLoading(false);
+      setStatusMessage('');
     }
   };
 
@@ -267,17 +413,40 @@ export default function AIAgentScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {messages.length === 0 && (
+      {/* Base gradient: bottom-to-top, always visible */}
+      <LinearGradient
+        colors={isDark
+          ? ['transparent', 'rgba(129,140,248,0.13)']
+          : ['transparent', 'rgba(79,70,229,0.08)']}
+        start={{ x: 0.5, y: 0.3 }}
+        end={{ x: 0.5, y: 1 }}
+        style={StyleSheet.absoluteFillObject}
+        pointerEvents="none"
+      />
+      {/* Glow layer 1: purple/indigo — phase 1 */}
+      <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: glow1Opacity }]} pointerEvents="none">
         <LinearGradient
-          colors={isDark
-            ? ['rgba(129,140,248,0.14)', 'transparent']
-            : ['rgba(79,70,229,0.09)', 'transparent']}
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 0.65 }}
+          colors={['transparent', 'rgba(147,51,234,0.18)', 'rgba(99,102,241,0.12)']}
+          start={{ x: 0.2, y: 0 }} end={{ x: 0.8, y: 1 }}
           style={StyleSheet.absoluteFillObject}
-          pointerEvents="none"
         />
-      )}
+      </Animated.View>
+      {/* Glow layer 2: cyan/blue — phase 2 */}
+      <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: glow2Opacity }]} pointerEvents="none">
+        <LinearGradient
+          colors={['transparent', 'rgba(6,182,212,0.16)', 'rgba(59,130,246,0.12)']}
+          start={{ x: 0.8, y: 0 }} end={{ x: 0.2, y: 1 }}
+          style={StyleSheet.absoluteFillObject}
+        />
+      </Animated.View>
+      {/* Glow layer 3: pink/magenta — phase 3 */}
+      <Animated.View style={[StyleSheet.absoluteFillObject, { opacity: glow3Opacity }]} pointerEvents="none">
+        <LinearGradient
+          colors={['transparent', 'rgba(236,72,153,0.15)', 'rgba(167,139,250,0.12)']}
+          start={{ x: 0.5, y: 0 }} end={{ x: 0.5, y: 1 }}
+          style={StyleSheet.absoluteFillObject}
+        />
+      </Animated.View>
       <SafeAreaView style={{ flex: 1 }}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -286,10 +455,17 @@ export default function AIAgentScreen() {
       >
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
-          <View style={styles.headerTitleContainer}>
-            <View style={[styles.statusDot, { backgroundColor: loading ? colors.orange : colors.green }]} />
-            <Text style={[styles.headerTitle, { color: colors.text }]}>AI Agent</Text>
-          </View>
+          <TouchableOpacity
+            ref={triggerRef}
+            style={styles.headerTitleContainer}
+            onPress={showModelPicker}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.headerTitle, { color: colors.text }]}>
+              {MODELS.find(m => m.id === selectedModel)?.label ?? 'AI Agent'}
+            </Text>
+            <Ionicons name="chevron-down" size={15} color={colors.textSecondary} style={styles.headerChevron} />
+          </TouchableOpacity>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             {messages.length > 0 && (
               <TouchableOpacity
@@ -318,6 +494,12 @@ export default function AIAgentScreen() {
           keyExtractor={(_, index) => index.toString()}
           contentContainerStyle={styles.messageList}
           showsVerticalScrollIndicator={false}
+          onScrollToIndexFailed={({ index: failedIndex, averageItemLength }) => {
+            flatListRef.current?.scrollToOffset({
+              offset: averageItemLength * failedIndex,
+              animated: true,
+            });
+          }}
           ListEmptyComponent={
             <View style={styles.welcomeContainer}>
               <Text style={[styles.welcomeTitle, { color: colors.text }]}>
@@ -341,8 +523,9 @@ export default function AIAgentScreen() {
               </View>
             </View>
           }
-          renderItem={({ item }) => {
+          renderItem={({ item, index }) => {
             const isUser = item.role === 'user';
+            const isTyping = streamingIndex === index;
             return (
               <View style={styles.messageWrapper}>
                 {!isUser && item.toolCalls && item.toolCalls.length > 0 && (
@@ -368,6 +551,8 @@ export default function AIAgentScreen() {
                   >
                     {isUser ? (
                       <Text style={styles.userMessageText}>{item.content}</Text>
+                    ) : isTyping ? (
+                      <Text style={[styles.messageText, { color: colors.text }]}>{item.content}</Text>
                     ) : (
                       renderMessageContent(item.content)
                     )}
@@ -387,7 +572,7 @@ export default function AIAgentScreen() {
         )}
 
         {/* Input Bar */}
-        <View style={[styles.inputContainer, { backgroundColor: colors.background }]}>
+        <View style={styles.inputContainer}>
           <View style={[
             styles.inputCard,
             {
@@ -423,6 +608,55 @@ export default function AIAgentScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Model Picker Dropdown */}
+        <Modal
+          visible={modelPickerVisible}
+          animationType="fade"
+          transparent
+          onRequestClose={() => setModelPickerVisible(false)}
+        >
+          <TouchableOpacity
+            style={{ flex: 1 }}
+            activeOpacity={1}
+            onPress={() => setModelPickerVisible(false)}
+          >
+            {dropdownPos && (
+              <View
+                style={[
+                  styles.dropdown,
+                  {
+                    top: dropdownPos.y,
+                    left: dropdownPos.x,
+                    backgroundColor: colors.surface,
+                  },
+                ]}
+              >
+                {MODELS.map((model, idx) => (
+                  <TouchableOpacity
+                    key={model.id}
+                    style={[
+                      styles.dropdownItem,
+                      idx > 0 && { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border },
+                    ]}
+                    onPress={() => handleModelSelect(model.id)}
+                    activeOpacity={0.75}
+                  >
+                    <View style={styles.dropdownItemContent}>
+                      <Text style={[styles.dropdownProvider, { color: colors.textTertiary }]}>
+                        {model.provider === 'gemini' ? 'Google' : 'Anthropic'}
+                      </Text>
+                      <Text style={[styles.dropdownLabel, { color: colors.text }]}>{model.label}</Text>
+                    </View>
+                    {selectedModel === model.id && (
+                      <Ionicons name="checkmark" size={18} color={colors.accent} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </TouchableOpacity>
+        </Modal>
 
         {/* Tool Call Detail Sheet */}
         <Modal
@@ -464,16 +698,14 @@ const styles = StyleSheet.create({
   headerTitleContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 8,
+    gap: 4,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 17,
+    fontWeight: '500',
+  },
+  headerChevron: {
+    marginTop: 1,
   },
   headerBtn: {
     paddingHorizontal: 14,
@@ -570,6 +802,7 @@ const styles = StyleSheet.create({
   inputContainer: {
     paddingHorizontal: 16,
     paddingVertical: 10,
+    backgroundColor: 'transparent',
   },
   inputCard: {
     flexDirection: 'row',
@@ -657,6 +890,38 @@ const styles = StyleSheet.create({
   tableCell: {
     flex: 1,
     paddingRight: 8,
+  },
+  dropdown: {
+    position: 'absolute',
+    minWidth: 230,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.14,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 16,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+  },
+  dropdownItemContent: {
+    gap: 2,
+  },
+  dropdownProvider: {
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  dropdownLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 1,
   },
   toolCallsContainer: {
     flexDirection: 'row',

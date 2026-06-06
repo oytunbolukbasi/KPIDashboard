@@ -1,5 +1,5 @@
 import React, { useRef, useCallback, useState, useEffect } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView, Switch, Alert, ActivityIndicator, Linking } from 'react-native';
+import { View, StyleSheet, Text, TextInput, TouchableOpacity, ScrollView, Switch, Alert, ActivityIndicator, Linking } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getSecureItem, setSecureItem } from '@/lib/secure-store-fallback';
@@ -16,11 +16,34 @@ export default function SettingsScreen() {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
+  const [geminiKey, setGeminiKey] = useState('');
+  const [geminiSaved, setGeminiSaved] = useState(false);
+  const [claudeKey, setClaudeKey] = useState('');
+  const [claudeSaved, setClaudeSaved] = useState(false);
+
   useEffect(() => {
     getSecureItem('netmera_mcp_token')
       .then((tok) => setIsConnected(!!tok))
       .catch(() => {});
+    getSecureItem('gemini_api_key').then((k) => setGeminiSaved(!!k)).catch(() => {});
+    getSecureItem('anthropic_api_key').then((k) => setClaudeSaved(!!k)).catch(() => {});
   }, []);
+
+  const handleSaveGeminiKey = async () => {
+    if (!geminiKey.trim()) return;
+    await setSecureItem('gemini_api_key', geminiKey.trim());
+    setGeminiKey('');
+    setGeminiSaved(true);
+    Alert.alert('', 'Gemini API Key kaydedildi.');
+  };
+
+  const handleSaveClaudeKey = async () => {
+    if (!claudeKey.trim()) return;
+    await setSecureItem('anthropic_api_key', claudeKey.trim());
+    setClaudeKey('');
+    setClaudeSaved(true);
+    Alert.alert('', 'Claude API Key kaydedildi.');
+  };
 
   useEffect(() => {
     const handleUrl = async ({ url }: { url: string }) => {
@@ -90,6 +113,74 @@ export default function SettingsScreen() {
               trackColor={{ false: colors.border, true: colors.accent }}
               thumbColor="#fff"
             />
+          </View>
+        </View>
+
+        {/* AI Services */}
+        <Text style={[styles.sectionLabel, { color: colors.textTertiary }]}>AI Servisleri</Text>
+        <View style={[styles.section, { backgroundColor: colors.surface }]}>
+          {/* Gemini */}
+          <View style={[styles.apiKeyItem, { borderBottomColor: colors.border }]}>
+            <View style={styles.apiKeyHeader}>
+              <Text style={[styles.apiKeyLabel, { color: colors.text }]}>Gemini API Key</Text>
+              {geminiSaved && (
+                <View style={[styles.savedBadge, { backgroundColor: 'rgba(34,197,94,0.1)' }]}>
+                  <View style={styles.savedDot} />
+                  <Text style={styles.savedText}>Kaydedildi</Text>
+                </View>
+              )}
+            </View>
+            <View style={styles.apiKeyRow}>
+              <TextInput
+                style={[styles.apiKeyInput, { color: colors.text, backgroundColor: colors.background, borderColor: colors.border }]}
+                value={geminiKey}
+                onChangeText={setGeminiKey}
+                placeholder={geminiSaved ? '••••••••••••••••' : 'AIzaSy...'}
+                placeholderTextColor={colors.textTertiary}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <TouchableOpacity
+                style={[styles.saveKeyBtn, { backgroundColor: geminiKey.trim() ? colors.accent : colors.border }]}
+                onPress={handleSaveGeminiKey}
+                disabled={!geminiKey.trim()}
+              >
+                <Text style={styles.saveKeyBtnText}>Kaydet</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Claude */}
+          <View style={styles.apiKeyItem}>
+            <View style={styles.apiKeyHeader}>
+              <Text style={[styles.apiKeyLabel, { color: colors.text }]}>Claude API Key</Text>
+              {claudeSaved && (
+                <View style={[styles.savedBadge, { backgroundColor: 'rgba(34,197,94,0.1)' }]}>
+                  <View style={styles.savedDot} />
+                  <Text style={styles.savedText}>Kaydedildi</Text>
+                </View>
+              )}
+            </View>
+            <View style={styles.apiKeyRow}>
+              <TextInput
+                style={[styles.apiKeyInput, { color: colors.text, backgroundColor: colors.background, borderColor: colors.border }]}
+                value={claudeKey}
+                onChangeText={setClaudeKey}
+                placeholder={claudeSaved ? '••••••••••••••••' : 'sk-ant-...'}
+                placeholderTextColor={colors.textTertiary}
+                secureTextEntry
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              <TouchableOpacity
+                style={[styles.saveKeyBtn, { backgroundColor: claudeKey.trim() ? colors.accent : colors.border }]}
+                onPress={handleSaveClaudeKey}
+                disabled={!claudeKey.trim()}
+              >
+                <Text style={styles.saveKeyBtnText}>Kaydet</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -202,6 +293,64 @@ const styles = StyleSheet.create({
   connectButtonText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: '700',
+  },
+  apiKeyItem: {
+    padding: 20,
+    gap: 12,
+    borderBottomWidth: 1,
+  },
+  apiKeyHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  apiKeyLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  savedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 100,
+  },
+  savedDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#22c55e',
+  },
+  savedText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#22c55e',
+  },
+  apiKeyRow: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'center',
+  },
+  apiKeyInput: {
+    flex: 1,
+    height: 46,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    fontSize: 14,
+  },
+  saveKeyBtn: {
+    height: 46,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveKeyBtnText: {
+    color: '#fff',
+    fontSize: 14,
     fontWeight: '700',
   },
 });
