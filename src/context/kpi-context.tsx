@@ -54,8 +54,8 @@ export function KPIProvider({ children }: { children: React.ReactNode }) {
         if (parts.length === 3) {
           const mm = parts[1].padStart(2, '0');
           const yyyy = parts[2];
-          const newDate = `${mm}.${yyyy}`;
-          await KPIDatabase.updateEntry(item.id, { ...item, date: newDate });
+          const { id: _id, ...rest } = item;
+          await KPIDatabase.updateEntry(item.id, { ...rest, date: `${mm}.${yyyy}` });
           needsRefresh = true;
         }
       }
