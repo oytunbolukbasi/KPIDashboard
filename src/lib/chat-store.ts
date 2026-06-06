@@ -5,6 +5,7 @@
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   addDoc,
   updateDoc,
@@ -73,6 +74,12 @@ export async function updateSession(id: string, messages: AgentMessage[]): Promi
     messages,
     updatedAt: serverTimestamp(),
   });
+}
+
+export async function getSession(id: string): Promise<ChatSession | null> {
+  const snap = await getDoc(doc(db, COL, id));
+  if (!snap.exists()) return null;
+  return toSession(snap.id, snap.data());
 }
 
 export async function deleteSession(id: string): Promise<void> {

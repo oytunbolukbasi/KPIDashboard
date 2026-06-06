@@ -25,33 +25,13 @@ function formatPct(n: number | null): string {
   return `${sign}${Math.abs(n).toFixed(2)}%`;
 }
 
-function shortDate(d: string): string {
+function shortDate(d: string, locale: string): string {
   const parts = d.split('.');
-  // Support both DD.MM.YYYY and MM.YYYY formats
-  if (parts.length === 3) {
-    const month = parts[1];
-    const year = parts[2].substring(2);
-    const months: Record<string, string> = {
-      '01': 'Oca', '02': 'Şub', '03': 'Mar', '04': 'Nis',
-      '05': 'May', '06': 'Haz', '07': 'Tem', '08': 'Ağu',
-      '09': 'Eyl', '10': 'Eki', '11': 'Kas', '12': 'Ara'
-    };
-    const mStr = months[month] || '';
-    return `${mStr}${year}`;
-  }
-  if (parts.length === 2) {
-    // MM.YYYY
-    const month = parts[0];
-    const year = parts[1].substring(2);
-    const months: Record<string, string> = {
-      '01': 'Oca', '02': 'Şub', '03': 'Mar', '04': 'Nis',
-      '05': 'May', '06': 'Haz', '07': 'Tem', '08': 'Ağu',
-      '09': 'Eyl', '10': 'Eki', '11': 'Kas', '12': 'Ara'
-    };
-    const mStr = months[month] || '';
-    return `${mStr}${year}`;
-  }
-  return d;
+  const monthIdx = parts.length === 3 ? parseInt(parts[1], 10) : parts.length === 2 ? parseInt(parts[0], 10) : null;
+  const yearFull = parts.length === 3 ? parts[2] : parts.length === 2 ? parts[1] : null;
+  if (monthIdx === null || yearFull === null) return d;
+  const mStr = new Intl.DateTimeFormat(locale, { month: 'short' }).format(new Date(parseInt(yearFull, 10), monthIdx - 1, 1));
+  return `${mStr} ${yearFull.substring(2)}`;
 }
 
 function calcMax(val: number) {
@@ -68,16 +48,23 @@ function calcMin(val: number) {
 }
 
 function TooltipTracker({ item, onUpdate }: any) {
+  const onUpdateRef = React.useRef(onUpdate);
+  React.useLayoutEffect(() => {
+    onUpdateRef.current = onUpdate;
+  });
+
+  const value = item?.value;
   React.useEffect(() => {
-    onUpdate(item);
+    onUpdateRef.current(item);
     Haptics.selectionAsync();
-  }, [item, onUpdate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]); // primitive dep prevents object-reference re-render loop
 
   return <View />;
 }
 
 export default function DashboardScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { computed, loading } = useKPI();
   const { colors, isDark } = useThemeContext();
   const insets = useSafeAreaInsets();
@@ -176,13 +163,9 @@ export default function DashboardScreen() {
     const monthNum = parts.length === 3 ? parts[1] : parts.length === 2 ? parts[0] : null;
     const year = parts.length === 3 ? parts[2] : parts.length === 2 ? parts[1] : null;
     if (!monthNum || !year) return null;
-    const monthNames: Record<string, string> = {
-      '01': 'Ocak', '02': 'Şubat', '03': 'Mart', '04': 'Nisan',
-      '05': 'Mayıs', '06': 'Haziran', '07': 'Temmuz', '08': 'Ağustos',
-      '09': 'Eylül', '10': 'Ekim', '11': 'Kasım', '12': 'Aralık'
-    };
-    return `Son Güncelleme: ${monthNames[monthNum] || monthNum} ${year}`;
-  }, [latest]);
+    const monthName = new Intl.DateTimeFormat(i18n.language, { month: 'long' }).format(new Date(parseInt(year, 10), parseInt(monthNum, 10) - 1, 1));
+    return t('dashboard.lastUpdate', { month: monthName, year });
+  }, [latest, i18n.language, t]);
 
   const [activeUser, setActiveUser] = useState<any>(null);
 
@@ -212,7 +195,7 @@ export default function DashboardScreen() {
         frontColor: colors.chartLine1,
         labelComponent: () => (
           <Text style={{ width: 40, textAlign: 'center', fontSize: 11, color: colors.textTertiary, marginLeft: 0, marginTop: 12, fontWeight: '600' }}>
-            {shortDate(e.date)}
+            {shortDate(e.date, i18n.language)}
           </Text>
         ),
         spacing: 4,
@@ -271,7 +254,7 @@ export default function DashboardScreen() {
   const activeUsersLineData = useMemo(() => {
     return computed.map((e) => ({
       value: e.activeUsers,
-      label: shortDate(e.date),
+      label: shortDate(e.date, i18n.language),
       dateFull: e.date,
       change: e.activeUsersChange,
     }));
@@ -288,6 +271,13 @@ export default function DashboardScreen() {
     const maxVal = Math.max(...activeUsersLineData.map(d => d.value));
     return calcMax(maxVal);
   }, [activeUsersLineData]);
+
+  const activeUsersWidth = useMemo(() => Math.max(chartWidth, computed.length * 60 + 40), [chartWidth, computed.length]);
+
+  const activeUsersYLabels = useMemo(() => {
+    const step = (maxActive - minActive) / 4;
+    return [maxActive, maxActive - step, maxActive - 2 * step, maxActive - 3 * step, minActive];
+  }, [maxActive, minActive]);
 
   const pushPieData = useMemo(() => {
     if (!latest) return [];
@@ -487,7 +477,7 @@ export default function DashboardScreen() {
                     <Text style={[
                       styles.monthChipText,
                       { color: isActive ? '#fff' : colors.text }
-                    ]}>{shortDate(entry.date)}</Text>
+                    ]}>{shortDate(entry.date, i18n.language)}</Text>
                   </TouchableOpacity>
                 );
               })}
@@ -513,34 +503,56 @@ export default function DashboardScreen() {
               </View>
             )}
           </View>
-          <LineChart
-            {...commonChartProps}
-            data={activeUsersLineData}
-            yAxisOffset={minActive}
-            maxValue={maxActive - minActive}
-            stepValue={(maxActive - minActive) / 4}
-            width={chartWidth}
-            height={180}
-            thickness={4}
-            color={colors.green}
-            hideDataPoints
-            curved
-            isAnimated
-            pointerConfig={{
-              pointerStripHeight: 180,
-              pointerStripColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
-              pointerStripWidth: 2,
-              pointerColor: colors.green,
-              radius: 6,
-              pointerLabelWidth: 100,
-              pointerLabelHeight: 80,
-              activatePointersOnLongPress: false,
-              activatePointersDelay: 50,
-              autoAdjustPointerLabelPosition: true,
-              persistPointer: true,
-              pointerLabelComponent: usersPointerComponent,
-            }}
-          />
+          <View style={{ flexDirection: 'row' }}>
+            {/* Fixed left Y-axis labels */}
+            <View style={{ width: 45, height: 180, justifyContent: 'space-between', paddingBottom: 0 }}>
+              {activeUsersYLabels.map((val, i) => (
+                <Text key={i} style={{ color: colors.textTertiary, fontSize: 10, textAlign: 'right', paddingRight: 6 }}>
+                  {formatNum(val)}
+                </Text>
+              ))}
+            </View>
+            {/* Scrollable chart area */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              bounces={false}
+              style={{ flex: 1 }}
+            >
+              <View style={{ width: activeUsersWidth, paddingBottom: 16 }}>
+                <LineChart
+                  {...commonChartProps}
+                  data={activeUsersLineData}
+                  yAxisOffset={minActive}
+                  maxValue={maxActive - minActive}
+                  stepValue={(maxActive - minActive) / 4}
+                  width={activeUsersWidth}
+                  height={180}
+                  thickness={4}
+                  color={colors.green}
+                  hideDataPoints
+                  curved
+                  isAnimated
+                  hideYAxisText
+                  yAxisLabelWidth={0}
+                  pointerConfig={{
+                    pointerStripHeight: 180,
+                    pointerStripColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)',
+                    pointerStripWidth: 2,
+                    pointerColor: colors.green,
+                    radius: 6,
+                    pointerLabelWidth: 100,
+                    pointerLabelHeight: 80,
+                    activatePointersOnLongPress: false,
+                    activatePointersDelay: 50,
+                    autoAdjustPointerLabelPosition: true,
+                    persistPointer: true,
+                    pointerLabelComponent: usersPointerComponent,
+                  }}
+                />
+              </View>
+            </ScrollView>
+          </View>
         </View>
 
         {/* Engagement Combo Chart (MAU/DAU & Stickiness) */}

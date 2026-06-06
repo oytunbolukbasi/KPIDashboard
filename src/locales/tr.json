@@ -35,7 +35,8 @@
     "mauDauTrend": "MAU & DAU Trendi",
     "stickinessTrend": "Kalıcılık Trendi",
     "pushDistribution": "Push İzni Dağılımı",
-    "latestData": "Son Veriler"
+    "latestData": "Son Veriler",
+    "lastUpdate": "Son Güncelleme: {{month}} {{year}}"
   },
   "data": {
     "title": "Veri Yönetimi",
@@ -65,6 +66,52 @@
     "save": "Kaydet",
     "update": "Güncelle",
     "required": "Bu alan zorunludur"
+  },
+  "common": {
+    "back": "Geri",
+    "cancel": "İptal",
+    "error": "Hata",
+    "ok": "Tamam",
+    "delete": "Sil",
+    "deleteAll": "Tümünü Sil",
+    "close": "Kapat",
+    "goToSettings": "Ayarlar'a Git"
+  },
+  "chat": {
+    "history": "Konuşma Geçmişi",
+    "noHistory": "Henüz konuşma yok",
+    "noHistoryDesc": "AI Agent ile konuşmaya başladığında geçmişin burada görünecek.",
+    "deleteTitle": "Konuşmayı Sil",
+    "deleteConfirm": "\"{{title}}\" konuşmasını silmek istediğinizden emin misiniz?",
+    "deleteAllConfirm": "Tüm konuşma geçmişini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "deleteError": "Konuşma silinemedi.",
+    "deleteAllError": "Konuşmalar silinemedi.",
+    "message_one": "{{count}} mesaj",
+    "message_other": "{{count}} mesaj",
+    "justNow": "Az önce",
+    "minutesAgo": "{{count}} dakika önce",
+    "hoursAgo": "{{count}} saat önce",
+    "daysAgo": "{{count}} gün önce",
+    "notFound": "Konuşma bulunamadı.",
+    "defaultTitle": "Konuşma"
+  },
+  "aiAgent": {
+    "welcome": "Merhaba,\nNasıl yardımcı olabilirim?",
+    "placeholder": "Sorunuzu yazın...",
+    "newChat": "+ Yeni",
+    "history": "Geçmiş",
+    "keysRequiredDesc": "AI Agent'ı etkinleştirmek için önce API anahtarlarınızı girmeniz gerekmektedir.",
+    "starting": "Başlatılıyor...",
+    "errorMsg": "Hata oluştu: {{message}}",
+    "toolSuccess": "Başarılı",
+    "toolError": "Hata",
+    "toolErrorDetail": "Hata Detayı",
+    "toolArguments": "Girdi Parametreleri",
+    "toolResponse": "Sunucu Yanıtı",
+    "quickPrompt1": "Uygulama sağlık durumu?",
+    "quickPrompt2": "Son kampanya raporları",
+    "quickPrompt3": "VIP segment özeti",
+    "quickPrompt4": "Funnel raporlarını listele"
   },
   "settings": {
     "title": "Ayarlar",

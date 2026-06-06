@@ -35,7 +35,8 @@
     "mauDauTrend": "MAU & DAU Trend",
     "stickinessTrend": "Stickiness Trend",
     "pushDistribution": "Push Opt-in Distribution",
-    "latestData": "Latest Data"
+    "latestData": "Latest Data",
+    "lastUpdate": "Last Update: {{month}} {{year}}"
   },
   "data": {
     "title": "Data Management",
@@ -65,6 +66,52 @@
     "save": "Save",
     "update": "Update",
     "required": "This field is required"
+  },
+  "common": {
+    "back": "Back",
+    "cancel": "Cancel",
+    "error": "Error",
+    "ok": "OK",
+    "delete": "Delete",
+    "deleteAll": "Delete All",
+    "close": "Close",
+    "goToSettings": "Go to Settings"
+  },
+  "chat": {
+    "history": "Chat History",
+    "noHistory": "No conversations yet",
+    "noHistoryDesc": "Your conversations will appear here once you start chatting with AI Agent.",
+    "deleteTitle": "Delete Conversation",
+    "deleteConfirm": "Are you sure you want to delete \"{{title}}\"?",
+    "deleteAllConfirm": "Are you sure you want to delete all conversations? This action cannot be undone.",
+    "deleteError": "Failed to delete conversation.",
+    "deleteAllError": "Failed to delete conversations.",
+    "message_one": "{{count}} message",
+    "message_other": "{{count}} messages",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} min ago",
+    "hoursAgo": "{{count}} hr ago",
+    "daysAgo": "{{count}} days ago",
+    "notFound": "Conversation not found.",
+    "defaultTitle": "Conversation"
+  },
+  "aiAgent": {
+    "welcome": "Hello,\nHow can I help?",
+    "placeholder": "Type your question...",
+    "newChat": "+ New",
+    "history": "History",
+    "keysRequiredDesc": "Please enter your API keys first to enable the AI Agent to interpret your data.",
+    "starting": "Starting...",
+    "errorMsg": "An error occurred: {{message}}",
+    "toolSuccess": "Success",
+    "toolError": "Error",
+    "toolErrorDetail": "Error Details",
+    "toolArguments": "Arguments",
+    "toolResponse": "Response",
+    "quickPrompt1": "App health status?",
+    "quickPrompt2": "Latest campaign reports",
+    "quickPrompt3": "VIP segment overview",
+    "quickPrompt4": "List funnel reports"
   },
   "settings": {
     "title": "Settings",

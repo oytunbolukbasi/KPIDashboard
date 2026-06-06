@@ -33,10 +33,24 @@ function toEntry(id: string, data: any): KPIEntry {
   };
 }
 
+/** Parse "MM.YYYY" string to a sortable numeric value (YYYYMM) */
+function parseDateValue(dateStr: string): number {
+  const parts = dateStr.split('.');
+  if (parts.length === 2) {
+    const mm = parseInt(parts[0], 10);
+    const yyyy = parseInt(parts[1], 10);
+    return yyyy * 100 + mm; // e.g. "09.2025" → 202509, "01.2026" → 202601
+  }
+  return 0;
+}
+
 export async function getAllEntries(): Promise<KPIEntry[]> {
-  const q = query(collection(db, COL), orderBy('date', 'asc'));
+  const q = query(collection(db, COL));
   const snap = await getDocs(q);
-  return snap.docs.map((d) => toEntry(d.id, d.data()));
+  const entries = snap.docs.map((d) => toEntry(d.id, d.data()));
+  // Sort by parsed date ascending (old → new) to avoid alphabetical string sort issues
+  // e.g. "01.2026" must come AFTER "09.2025", not before
+  return entries.sort((a, b) => parseDateValue(a.date) - parseDateValue(b.date));
 }
 
 export async function addEntry(entry: Omit<KPIEntry, 'id'>): Promise<KPIEntry> {

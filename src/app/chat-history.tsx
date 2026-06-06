@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { useThemeContext } from '@/context/theme-context';
 import { getAllSessions, deleteSession, type ChatSession } from '@/lib/chat-store';
 
@@ -18,6 +19,7 @@ export default function ChatHistoryScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { colors } = useThemeContext();
+  const { t } = useTranslation();
 
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,19 +43,19 @@ export default function ChatHistoryScreen() {
 
   const handleDelete = (session: ChatSession) => {
     Alert.alert(
-      'Konuşmayı Sil',
-      `"${session.title}" konuşmasını silmek istediğinizden emin misiniz?`,
+      t('chat.deleteTitle'),
+      t('chat.deleteConfirm', { title: session.title }),
       [
-        { text: 'İptal', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Sil',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteSession(session.id);
               setSessions((prev) => prev.filter((s) => s.id !== session.id));
             } catch (e) {
-              Alert.alert('Hata', 'Konuşma silinemedi.');
+              Alert.alert(t('common.error'), t('chat.deleteError'));
             }
           },
         },
@@ -64,19 +66,19 @@ export default function ChatHistoryScreen() {
   const handleDeleteAll = () => {
     if (sessions.length === 0) return;
     Alert.alert(
-      'Tümünü Sil',
-      'Tüm konuşma geçmişini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.',
+      t('common.deleteAll'),
+      t('chat.deleteAllConfirm'),
       [
-        { text: 'İptal', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Tümünü Sil',
+          text: t('common.deleteAll'),
           style: 'destructive',
           onPress: async () => {
             try {
               await Promise.all(sessions.map((s) => deleteSession(s.id)));
               setSessions([]);
             } catch (e) {
-              Alert.alert('Hata', 'Konuşmalar silinemedi.');
+              Alert.alert(t('common.error'), t('chat.deleteAllError'));
             }
           },
         },
@@ -91,11 +93,11 @@ export default function ChatHistoryScreen() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
-    if (diffMins < 1) return 'Az önce';
-    if (diffMins < 60) return `${diffMins} dakika önce`;
-    if (diffHours < 24) return `${diffHours} saat önce`;
-    if (diffDays < 7) return `${diffDays} gün önce`;
-    return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
+    if (diffMins < 1) return t('chat.justNow');
+    if (diffMins < 60) return t('chat.minutesAgo', { count: diffMins });
+    if (diffHours < 24) return t('chat.hoursAgo', { count: diffHours });
+    if (diffDays < 7) return t('chat.daysAgo', { count: diffDays });
+    return date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
   const messageCount = (session: ChatSession) =>
@@ -106,15 +108,18 @@ export default function ChatHistoryScreen() {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Text style={[styles.backText, { color: colors.accent }]}>‹ Geri</Text>
+          <Text style={[styles.backChevron, { color: colors.accent }]}>‹</Text>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Konuşma Geçmişi</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{t('chat.history')}</Text>
         {sessions.length > 0 ? (
-          <TouchableOpacity onPress={handleDeleteAll}>
-            <Text style={[styles.deleteAllText, { color: colors.red ?? '#f87171' }]}>Tümünü Sil</Text>
+          <TouchableOpacity
+            style={[styles.deleteAllBtn, { backgroundColor: colors.redLight }]}
+            onPress={handleDeleteAll}
+          >
+            <Text style={[styles.deleteAllBtnText, { color: colors.red }]}>{t('common.deleteAll')}</Text>
           </TouchableOpacity>
         ) : (
-          <View style={{ width: 60 }} />
+          <View style={{ width: 80 }} />
         )}
       </View>
 
@@ -124,11 +129,8 @@ export default function ChatHistoryScreen() {
         </View>
       ) : sessions.length === 0 ? (
         <View style={styles.centered}>
-          <Text style={styles.emptyEmoji}>💬</Text>
-          <Text style={[styles.emptyTitle, { color: colors.text }]}>Henüz konuşma yok</Text>
-          <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}>
-            AI Agent ile konuşmaya başladığında geçmişin burada görünecek.
-          </Text>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>{t('chat.noHistory')}</Text>
+          <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}>{t('chat.noHistoryDesc')}</Text>
         </View>
       ) : (
         <FlatList
@@ -144,10 +146,16 @@ export default function ChatHistoryScreen() {
             />
           }
           renderItem={({ item }) => (
-            <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <View style={styles.cardContent}>
-                <View style={styles.cardIcon}>
-                  <Text style={styles.cardIconText}>🤖</Text>
+            <View style={[styles.card, { backgroundColor: colors.surface }]}>
+              <TouchableOpacity
+                style={styles.cardContent}
+                activeOpacity={0.7}
+                onPress={() => router.push(`/chat-session-detail?id=${item.id}`)}
+              >
+                <View style={[styles.cardIcon, { backgroundColor: colors.accentLight }]}>
+                  <Text style={[styles.cardIconInitial, { color: colors.accent }]}>
+                    {item.title.charAt(0).toUpperCase()}
+                  </Text>
                 </View>
                 <View style={styles.cardText}>
                   <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={2}>
@@ -155,7 +163,7 @@ export default function ChatHistoryScreen() {
                   </Text>
                   <View style={styles.cardMeta}>
                     <Text style={[styles.cardMetaText, { color: colors.textTertiary }]}>
-                      {messageCount(item)} mesaj
+                      {t('chat.message_one', { count: messageCount(item) })}
                     </Text>
                     <Text style={[styles.cardMetaDot, { color: colors.textTertiary }]}> · </Text>
                     <Text style={[styles.cardMetaText, { color: colors.textTertiary }]}>
@@ -163,12 +171,12 @@ export default function ChatHistoryScreen() {
                     </Text>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.deleteBtn, { borderColor: colors.border }]}
+                style={[styles.deleteBtn, { backgroundColor: colors.surfaceSecondary }]}
                 onPress={() => handleDelete(item)}
               >
-                <Text style={styles.deleteBtnText}>🗑</Text>
+                <Text style={[styles.deleteBtnText, { color: colors.textTertiary }]}>✕</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -188,23 +196,26 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderBottomWidth: 1,
   },
-  backBtn: { width: 60 },
-  backText: { fontSize: 18, fontWeight: '600' },
+  backBtn: { width: 44, height: 44, justifyContent: 'center' },
+  backChevron: { fontSize: 32, fontWeight: '200', lineHeight: 36, marginLeft: -2 },
   headerTitle: { fontSize: 16, fontWeight: '800' },
-  deleteAllText: { fontSize: 13, fontWeight: '600', width: 60, textAlign: 'right' },
+  deleteAllBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 100,
+  },
+  deleteAllBtnText: { fontSize: 13, fontWeight: '600' },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 40,
   },
-  emptyEmoji: { fontSize: 56, marginBottom: 16 },
   emptyTitle: { fontSize: 20, fontWeight: '800', marginBottom: 10 },
   emptyDesc: { fontSize: 14, textAlign: 'center', lineHeight: 20 },
   list: { padding: 16, gap: 12 },
   card: {
     borderRadius: 16,
-    borderWidth: 1,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -215,11 +226,13 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: 'rgba(108,99,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardIconText: { fontSize: 22 },
+  cardIconInitial: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
   cardText: { flex: 1 },
   cardTitle: { fontSize: 14, fontWeight: '600', lineHeight: 20, marginBottom: 4 },
   cardMeta: { flexDirection: 'row', alignItems: 'center' },
@@ -229,9 +242,8 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 10,
-    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  deleteBtnText: { fontSize: 16 },
+  deleteBtnText: { fontSize: 15, fontWeight: '500' },
 });

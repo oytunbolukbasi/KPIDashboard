@@ -16,7 +16,7 @@ function formatInput(val: number): string {
 }
 
 export default function EntryFormScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { entries, addEntry, updateEntry } = useKPI();
   const { colors } = useThemeContext();
   const insets = useSafeAreaInsets();
@@ -32,12 +32,10 @@ export default function EntryFormScreen() {
   const [mau, setMau] = useState('');
   const [dau, setDau] = useState('');
 
-  const MONTHS = [
-    { label: 'Oca', value: '01' }, { label: 'Şub', value: '02' }, { label: 'Mar', value: '03' },
-    { label: 'Nis', value: '04' }, { label: 'May', value: '05' }, { label: 'Haz', value: '06' },
-    { label: 'Tem', value: '07' }, { label: 'Ağu', value: '08' }, { label: 'Eyl', value: '09' },
-    { label: 'Eki', value: '10' }, { label: 'Kas', value: '11' }, { label: 'Ara', value: '12' },
-  ];
+  const MONTHS = Array.from({ length: 12 }, (_, i) => ({
+    label: new Intl.DateTimeFormat(i18n.language, { month: 'short' }).format(new Date(2000, i, 1)),
+    value: String(i + 1).padStart(2, '0'),
+  }));
   const currentYear = new Date().getFullYear();
   const YEARS = Array.from({ length: 5 }, (_, i) => String(currentYear - 2 + i));
 
@@ -95,7 +93,7 @@ export default function EntryFormScreen() {
     Alert.alert(
       t('form.success', 'Başarılı'),
       isEdit ? t('form.updated', 'Veriler güncellendi.') : t('form.saved', 'Veriler kaydedildi.'),
-      [{ text: 'Tamam', onPress: () => router.back() }]
+      [{ text: t('common.ok'), onPress: () => router.back() }]
     );
   };
 
